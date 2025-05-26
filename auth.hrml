@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login / Signup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .toggle {
+      text-align: center;
+      margin-top: 15px;
+      color: blue;
+      cursor: pointer;
+    }
+    #errorMsg {
+      color: red;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="formTitle">Login</h2>
+    <div id="errorMsg"></div>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" style="display:none;" />
+    <button onclick="handleAuth()" id="actionBtn">Login</button>
+    <div class="toggle" onclick="toggleForm()" id="toggleText">Don't have an account? Sign up</div>
+  </div>
+
+  <script type="module">
+    import { auth } from './firebase.js';
+    import {
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+
+    let isSignup = false;
+
+    window.toggleForm = () => {
+      isSignup = !isSignup;
+      document.getElementById("formTitle").textContent = isSignup ? "Sign Up" : "Login";
+      document.getElementById("confirmPassword").style.display = isSignup ? "block" : "none";
+      document.getElementById("actionBtn").textContent = isSignup ? "Sign Up" : "Login";
+      document.getElementById("toggleText").textContent = isSignup
+        ? "Already have an account? Login"
+        : "Don't have an account? Sign up";
+    };
+
+    window.handleAuth = async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const errorMsg = document.getElementById("errorMsg");
+
+      try {
+        errorMsg.textContent = "";
+
+        if (isSignup) {
+          if (password !== confirmPassword) {
+            errorMsg.textContent = "Passwords do not match.";
+            return;
+          }
+          await createUserWithEmailAndPassword(auth, email, password);
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+
+        window.location.href = "mosque.html";
+      } catch (error) {
+        errorMsg.textContent = error.message;
+      }
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = "mosque.html";
+      }
+    });
+  </script>
+</body>
+</html>
