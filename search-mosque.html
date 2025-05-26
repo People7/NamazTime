@@ -94,20 +94,30 @@
     }
 
     function filterMosques(query) {
-      const lowerQuery = query.toLowerCase();
-      return mosqueList.filter(mosque => {
-        return Object.values(mosque).some(val =>
-          val && val.toString().toLowerCase().includes(lowerQuery)
-        );
-      });
-    }
+  const terms = query.toLowerCase().split(/\s+/);
+  return mosqueList.filter(mosque => {
+    const combined = [
+      mosque.mosqueName,
+      mosque.location,
+      mosque.area,
+      mosque.pincode,
+      mosque.city,
+      mosque.state,
+      mosque.country
+    ].join(" ").toLowerCase();
 
-    async function performSearch() {
-      const query = document.getElementById("searchInput").value.trim();
-      if (!mosqueList.length) await loadMosques();
-      const results = query ? filterMosques(query) : [];
-      renderTable(results);
-    }
+    return terms.every(term => combined.includes(term));
+  });
+}
+
+async function performSearch() {
+  const query = document.getElementById("searchInput").value.trim();
+  if (!mosqueList.length) await loadMosques();
+
+  const results = query ? filterMosques(query) : [];
+  renderTable(results);
+}
+
 
     async function findNearbyMosques() {
       if (!navigator.geolocation) {
