@@ -58,7 +58,15 @@
 <button type="button" onclick="getAutoTimings()">Auto Fill Timings</button>
 <button type="submit">Save & Display</button>
 
-  </form>  <script>
+  </form>  
+
+<script>
+  if (localStorage.getItem("loggedIn") !== "true") {
+    alert("You must be logged in to access this page.");
+    window.location.href = "auth.html";
+  }
+</script>
+<script>
     function to12HourFormat(time24) {
       const [hour, minute] = time24.split(":");
       let h = parseInt(hour);
