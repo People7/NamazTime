@@ -1,0 +1,117 @@
+<!-- mosque-form.html --><!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mosque Input Form</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Mosque Details & Prayer Time Setup</h2>
+  <form id="mosqueForm">
+    <label>Mosque Name: <input type="text" name="mosqueName" required></label>
+    <label>Landmark or Road: <input type="text" name="location"></label>
+    <label>Area: <input type="text" name="area"></label>
+    <label>Pincode: <input type="text" name="pincode"></label>
+    <label>City: <input type="text" name="city" required></label>
+    <label>State: <input type="text" name="state"></label>
+    <label>Country: <input type="text" name="country" required></label><label>Hijri Date (Manual Input): <input type="text" name="hijriDate" id="hijriDate"></label>
+
+<h3>Prayer Timings (Azan & Jamaat)</h3>
+<label>Fajr Azan: <input type="time" name="fajrAzan" step="1" required></label>
+<label>Fajr Jamaat: <input type="time" name="fajr" step="1" required></label>
+<label>Dhuhr Azan: <input type="time" name="dhuhrAzan" step="1" required></label>
+<label>Dhuhr Jamaat: <input type="time" name="dhuhr" step="1" required></label>
+<label>Asr Azan: <input type="time" name="asrAzan" step="1" required></label>
+<label>Asr Jamaat: <input type="time" name="asr" step="1" required></label>
+<label>Maghrib Azan: <input type="time" name="maghribAzan" step="1" required></label>
+<label>Maghrib Jamaat: <input type="time" name="maghrib" step="1" required></label>
+<label>Isha Azan: <input type="time" name="ishaAzan" step="1" required></label>
+<label>Isha Jamaat: <input type="time" name="isha" step="1" required></label>
+<label>Jumuah Azan: <input type="time" name="jumuahAzan" step="1" required></label>
+<label>Jumuah Jamaat: <input type="time" name="jumuah" step="1" required></label>
+
+<h3>Sun Times</h3>
+<label>Tulu (Sunrise): <input type="time" name="tulu" step="1" required></label>
+<label>Gurub (Sunset): <input type="time" name="gurub" step="1" required></label>
+<label>Zawal Time: <input type="time" name="zawal" step="1" required></label>
+
+<button type="button" onclick="getAutoTimings()">Auto Fill Timings</button>
+<button type="submit">Save & Display</button>
+
+  </form>  <script>
+    function to12HourFormat(time24) {
+      const [hour, minute] = time24.split(":");
+      let h = parseInt(hour);
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      return `${("0" + h).slice(-2)}:${minute} ${ampm}`;
+    }
+
+    async function getAutoTimings() {
+      const city = document.querySelector('[name="city"]').value;
+      const country = document.querySelector('[name="country"]').value;
+      if (!city || !country) {
+        alert("Please fill in both city and country to get timings.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`);
+        const data = await response.json();
+        const timings = data.data.timings;
+        const hijriDate = data.data.date.hijri.date;
+
+        const fields = {
+          fajrAzan: timings.Fajr,
+          dhuhrAzan: timings.Dhuhr,
+          asrAzan: timings.Asr,
+          maghribAzan: timings.Maghrib,
+          ishaAzan: timings.Isha,
+          tulu: timings.Sunrise,
+          gurub: timings.Sunset,
+          zawal: timings.Midnight
+        };
+
+        for (const [key, time] of Object.entries(fields)) {
+          const input = document.querySelector(`[name="${key}"]`);
+          if (input) input.value = time;
+        }
+
+        document.getElementById("hijriDate").value = hijriDate;
+      } catch (err) {
+        alert("Error fetching prayer times. Please check city and country input.");
+      }
+    }
+
+    document.getElementById("mosqueForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+      localStorage.setItem("mosqueData", JSON.stringify(data));
+      window.location.href = "display.html";
+    });
+  </script></body>
+</html>

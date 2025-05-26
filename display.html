@@ -1,0 +1,100 @@
+<!-- display.html --><!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mosque Prayer Time Display</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #000;
+      color: #0f0;
+      padding: 20px;
+    }
+    .mosque-info, .prayer-times, .sun-times {
+      margin-bottom: 20px;
+    }
+    h2, h3 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #0f0;
+      padding: 10px;
+      text-align: center;
+    }
+    .time-section {
+      display: flex;
+      justify-content: space-around;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="mosqueName"></h2>
+  <div class="mosque-info" id="mosqueDetails"></div>
+  <div class="prayer-times">
+    <h3>Prayer Timings</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Prayer</th>
+          <th>Azan</th>
+          <th>Jamaat</th>
+        </tr>
+      </thead>
+      <tbody id="prayerTable"></tbody>
+    </table>
+  </div>
+  <div class="sun-times">
+    <h3>Sun Times</h3>
+    <table>
+      <tbody>
+        <tr><th>Tulu</th><td id="tulu"></td></tr>
+        <tr><th>Gurub</th><td id="gurub"></td></tr>
+        <tr><th>Zawal</th><td id="zawal"></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="hijri-date" style="text-align:center; font-size: 1.5em; margin-top: 10px;">
+    Hijri Date: <span id="hijriDate"></span>
+  </div>
+  <div id="dateTime" style="text-align:center; font-size: 1.5em;"></div>  <script>
+    const data = JSON.parse(localStorage.getItem("mosqueData"));
+    if (data) {
+      document.getElementById("mosqueName").textContent = data.mosqueName;
+      document.getElementById("mosqueDetails").textContent = `${data.location}, ${data.area}, ${data.city} - ${data.pincode}, ${data.state}, ${data.country}`;
+
+      const prayers = [
+        { name: 'Fajr', azan: data.fajrAzan, jamaat: data.fajr },
+        { name: 'Dhuhr', azan: data.dhuhrAzan, jamaat: data.dhuhr },
+        { name: 'Asr', azan: data.asrAzan, jamaat: data.asr },
+        { name: 'Maghrib', azan: data.maghribAzan, jamaat: data.maghrib },
+        { name: 'Isha', azan: data.ishaAzan, jamaat: data.isha },
+        { name: 'Jumuah', azan: data.jumuahAzan || '-', jamaat: data.jumuah || '-' }
+      ];
+      const tbody = document.getElementById("prayerTable");
+      prayers.forEach(p => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${p.name}</td><td>${p.azan}</td><td>${p.jamaat}</td>`;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("tulu").textContent = data.tulu || '-';
+      document.getElementById("gurub").textContent = data.gurub || '-';
+      document.getElementById("zawal").textContent = data.zawal || '-';
+
+      document.getElementById("hijriDate").textContent = data.hijriDate || '-';
+    }
+
+    function updateDateTime() {
+  const now = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById("dateTime").textContent = 
+    `${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} | ${now.toLocaleDateString(undefined, options)}`;
+}
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+  </script></body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Mosque</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #eef2f3;
+    }
+    h2 {
+      text-align: center;
+    }
+    .search-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #ddd;
+    }
+    .no-results {
+      text-align: center;
+      color: #666;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Search Mosque by Location</h2>
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Enter locality, area, pincode, road, etc...">
+    <button onclick="performSearch()">Search</button>
+    <button onclick="findNearbyMosques()">Find Near Me</button>
+  </div>  <table id="mosqueTable" style="display: none;">
+    <thead>
+      <tr>
+        <th>Mosque Name</th>
+        <th>Landmark/Road</th>
+        <th>Area</th>
+        <th>Pincode</th>
+        <th>City</th>
+        <th>State</th>
+        <th>Country</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>  <div class="no-results" id="noResults">No mosque found matching your search.</div>  <script>
+    const mosqueList = JSON.parse(localStorage.getItem("mosqueList")) || [];
+
+    function renderTable(filteredMosques) {
+      const table = document.getElementById("mosqueTable");
+      const tbody = table.querySelector("tbody");
+      tbody.innerHTML = "";
+
+      filteredMosques.forEach(data => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${data.mosqueName || ""}</td>
+          <td>${data.location || ""}</td>
+          <td>${data.area || ""}</td>
+          <td>${data.pincode || ""}</td>
+          <td>${data.city || ""}</td>
+          <td>${data.state || ""}</td>
+          <td>${data.country || ""}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("noResults").style.display = filteredMosques.length ? "none" : "block";
+      table.style.display = filteredMosques.length ? "table" : "none";
+    }
+
+    function filterMosques(query) {
+      const lowerQuery = query.toLowerCase();
+      return mosqueList.filter(mosque => {
+        return Object.values(mosque).some(val =>
+          val && val.toString().toLowerCase().includes(lowerQuery)
+        );
+      });
+    }
+
+    function performSearch() {
+      const query = document.getElementById("searchInput").value.trim();
+      const results = query ? filterMosques(query) : [];
+      renderTable(results);
+    }
+
+    function findNearbyMosques() {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+        const data = await response.json();
+
+        const queryParts = [
+          data.address.suburb,
+          data.address.road,
+          data.address.city,
+          data.address.town,
+          data.address.state,
+          data.address.postcode
+        ];
+
+        const locationQuery = queryParts.filter(Boolean).join(" ");
+        document.getElementById("searchInput").value = locationQuery;
+        performSearch();
+      }, () => {
+        alert("Unable to retrieve your location.");
+      });
+    }
+  </script></body>
+</html>
