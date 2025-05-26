@@ -186,8 +186,12 @@
 
         // Click on row shows timetable
         row.addEventListener("click", () => {
-          showTimetable(mosque);
-        });
+  // Store the mosque data in sessionStorage
+  sessionStorage.setItem("selectedMosque", JSON.stringify(data));
+  // Redirect to the display page
+  window.location.href = "display.html";
+});
+
 
         tbody.appendChild(row);
       });
