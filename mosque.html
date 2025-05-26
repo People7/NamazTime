@@ -65,13 +65,6 @@
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
   import { collection, addDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      alert("You must be logged in to access this page.");
-      window.location.href = "auth.html";
-    }
-  });
-
   function to12HourFormat(time24) {
     const [hour, minute] = time24.split(":");
     let h = parseInt(hour);
