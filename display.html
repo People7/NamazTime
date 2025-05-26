@@ -1,4 +1,5 @@
-<!-- display.html --><!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Mosque Prayer Time Display</title>
@@ -60,11 +61,22 @@
   <div class="hijri-date" style="text-align:center; font-size: 1.5em; margin-top: 10px;">
     Hijri Date: <span id="hijriDate"></span>
   </div>
-  <div id="dateTime" style="text-align:center; font-size: 1.5em;"></div>  <script>
-    const data = JSON.parse(localStorage.getItem("mosqueData"));
-    if (data) {
-      document.getElementById("mosqueName").textContent = data.mosqueName;
-      document.getElementById("mosqueDetails").textContent = `${data.location}, ${data.area}, ${data.city} - ${data.pincode}, ${data.state}, ${data.country}`;
+  <div id="dateTime" style="text-align:center; font-size: 1.5em;"></div>
+
+  <script type="module">
+    import { db } from './firebase.js';
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    async function loadMosqueData() {
+      const snapshot = await getDocs(collection(db, "mosques"));
+      if (snapshot.empty) return;
+
+      const doc = snapshot.docs[0]; // Change to filter by document ID if needed
+      const data = doc.data();
+
+      document.getElementById("mosqueName").textContent = data.mosqueName || '';
+      document.getElementById("mosqueDetails").textContent = 
+        `${data.location}, ${data.area}, ${data.city} - ${data.pincode}, ${data.state}, ${data.country}`;
 
       const prayers = [
         { name: 'Fajr', azan: data.fajrAzan, jamaat: data.fajr },
@@ -88,13 +100,16 @@
       document.getElementById("hijriDate").textContent = data.hijriDate || '-';
     }
 
+    loadMosqueData();
+
     function updateDateTime() {
-  const now = new Date();
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById("dateTime").textContent = 
-    `${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} | ${now.toLocaleDateString(undefined, options)}`;
-}
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById("dateTime").textContent = 
+        `${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} | ${now.toLocaleDateString(undefined, options)}`;
+    }
     setInterval(updateDateTime, 1000);
     updateDateTime();
-  </script></body>
+  </script>
+</body>
 </html>
