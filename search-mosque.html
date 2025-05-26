@@ -125,41 +125,76 @@ async function performSearch() {
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(async (position) => {
-    const { latitude, longitude } = position.coords;
-
+  // Check permission status before requesting location
+  if (navigator.permissions) {
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-        {
-          headers: {
-            "User-Agent": "mosque-finder-app/1.0",
-            "Referer": window.location.origin
-          }
-        }
-      );
-
-      const data = await response.json();
-      const queryParts = [
-        data.address.suburb,
-        data.address.road,
-        data.address.city || data.address.town || data.address.village,
-        data.address.state,
-        data.address.postcode
-      ];
-
-      const locationQuery = queryParts.filter(Boolean).join(" ");
-      document.getElementById("searchInput").value = locationQuery;
-      performSearch();
-
-    } catch (error) {
-      console.error("Error fetching location data:", error);
-      alert("Failed to retrieve address from coordinates.");
+      const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+      if (permissionStatus.state === 'denied') {
+        alert("Location access is blocked. Please enable location permissions for this site in your browser settings.");
+        return;
+      }
+      // Optional: listen for changes in permission status
+      permissionStatus.onchange = () => {
+        console.log('Geolocation permission state changed to', permissionStatus.state);
+      };
+    } catch (err) {
+      console.warn('Permissions API is not fully supported in this browser');
     }
-  }, () => {
-    alert("Unable to retrieve your location.");
-  });
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+          {
+            headers: {
+              "User-Agent": "mosque-finder-app/1.0",
+              "Referer": window.location.origin
+            }
+          }
+        );
+
+        const data = await response.json();
+        const queryParts = [
+          data.address.suburb,
+          data.address.road,
+          data.address.city || data.address.town || data.address.village,
+          data.address.state,
+          data.address.postcode
+        ];
+
+        const locationQuery = queryParts.filter(Boolean).join(" ");
+        document.getElementById("searchInput").value = locationQuery;
+        performSearch();
+
+      } catch (error) {
+        console.error("Error fetching location data:", error);
+        alert("Failed to retrieve address from coordinates.");
+      }
+    },
+    (error) => {
+      console.error("Geolocation error:", error);
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          alert("Permission denied. Please allow location access in your browser settings.");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          alert("Location information is unavailable.");
+          break;
+        case error.TIMEOUT:
+          alert("The request to get your location timed out.");
+          break;
+        default:
+          alert("An unknown error occurred while retrieving location.");
+          break;
+      }
+    }
+  );
 }
+
 
 
     function redirectToSignup() {
