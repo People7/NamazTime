@@ -8,33 +8,67 @@
       font-family: 'Segoe UI', sans-serif;
       background-color: #000;
       color: #0f0;
-      padding: 20px;
+      padding: 10px;
+      margin: 0;
     }
-    .mosque-info, .prayer-times, .sun-times {
-      margin-bottom: 20px;
-    }
-    h2, h3 {
+
+    h2 {
       text-align: center;
+      font-size: 3em;
     }
+
+    h3 {
+      text-align: center;
+      font-size: 2em;
+      margin-top: 1em;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
+      font-size: 2em;
     }
+
     th, td {
       border: 1px solid #0f0;
-      padding: 10px;
+      padding: 15px;
       text-align: center;
     }
-    .time-section {
-      display: flex;
-      justify-content: space-around;
+
+    .mosque-info, #dateTime, .hijri-date {
+      text-align: center;
+      font-size: 2em;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      h2 {
+        font-size: 2em;
+      }
+
+      h3 {
+        font-size: 1.5em;
+      }
+
+      table {
+        font-size: 1.2em;
+      }
+
+      th, td {
+        padding: 10px;
+      }
+
+      .mosque-info, #dateTime, .hijri-date {
+        font-size: 1.2em;
+      }
     }
   </style>
 </head>
 <body>
   <h2 id="mosqueName"></h2>
   <div class="mosque-info" id="mosqueDetails"></div>
+
   <div class="prayer-times">
     <h3>Prayer Timings</h3>
     <table>
@@ -48,6 +82,7 @@
       <tbody id="prayerTable"></tbody>
     </table>
   </div>
+
   <div class="sun-times">
     <h3>Sun Times</h3>
     <table>
@@ -58,24 +93,35 @@
       </tbody>
     </table>
   </div>
-  <div class="hijri-date" style="text-align:center; font-size: 1.5em; margin-top: 10px;">
+
+  <div class="hijri-date">
     Hijri Date: <span id="hijriDate"></span>
   </div>
-  <div id="dateTime" style="text-align:center; font-size: 1.5em;"></div>
+
+  <div id="dateTime"></div>
 
   <script type="module">
     import { db } from './firebase.js';
     import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
+    function to12HourFormat(time24) {
+      if (!time24 || typeof time24 !== 'string') return '-';
+      let [hour, minute] = time24.split(":").map(Number);
+      if (isNaN(hour) || isNaN(minute)) return time24;
+      const ampm = hour >= 12 ? "PM" : "AM";
+      hour = hour % 12 || 12;
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${ampm}`;
+    }
+
     async function loadMosqueData() {
       const snapshot = await getDocs(collection(db, "mosques"));
       if (snapshot.empty) return;
 
-      const doc = snapshot.docs[0]; // Change to filter by document ID if needed
+      const doc = snapshot.docs[0];
       const data = doc.data();
 
       document.getElementById("mosqueName").textContent = data.mosqueName || '';
-      document.getElementById("mosqueDetails").textContent = 
+      document.getElementById("mosqueDetails").textContent =
         `${data.location}, ${data.area}, ${data.city} - ${data.pincode}, ${data.state}, ${data.country}`;
 
       const prayers = [
@@ -86,30 +132,35 @@
         { name: 'Isha', azan: data.ishaAzan, jamaat: data.isha },
         { name: 'Jumuah', azan: data.jumuahAzan || '-', jamaat: data.jumuah || '-' }
       ];
+
       const tbody = document.getElementById("prayerTable");
       prayers.forEach(p => {
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${p.name}</td><td>${p.azan}</td><td>${p.jamaat}</td>`;
+        row.innerHTML = `
+          <td>${p.name}</td>
+          <td>${to12HourFormat(p.azan)}</td>
+          <td>${to12HourFormat(p.jamaat)}</td>`;
         tbody.appendChild(row);
       });
 
-      document.getElementById("tulu").textContent = data.tulu || '-';
-      document.getElementById("gurub").textContent = data.gurub || '-';
-      document.getElementById("zawal").textContent = data.zawal || '-';
+      document.getElementById("tulu").textContent = to12HourFormat(data.tulu);
+      document.getElementById("gurub").textContent = to12HourFormat(data.gurub);
+      document.getElementById("zawal").textContent = to12HourFormat(data.zawal);
 
       document.getElementById("hijriDate").textContent = data.hijriDate || '-';
     }
 
-    loadMosqueData();
-
     function updateDateTime() {
       const now = new Date();
       const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      document.getElementById("dateTime").textContent = 
-        `${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} | ${now.toLocaleDateString(undefined, options)}`;
+      const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+      const date = now.toLocaleDateString(undefined, options);
+      document.getElementById("dateTime").textContent = `${time} | ${date}`;
     }
-    setInterval(updateDateTime, 1000);
+
+    loadMosqueData();
     updateDateTime();
+    setInterval(updateDateTime, 1000);
   </script>
 </body>
 </html>
