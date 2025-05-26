@@ -61,70 +61,88 @@
   </form>  
 
 <script type="module">
-  import { auth } from './firebase.js';
+  import { auth, db } from './firebase.js';
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+  import { collection, addDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
+  // Ensure user is authenticated
   onAuthStateChanged(auth, (user) => {
     if (!user) {
       alert("You must be logged in to access this page.");
       window.location.href = "auth.html";
     }
   });
-</script>
-<script>
-    function to12HourFormat(time24) {
-      const [hour, minute] = time24.split(":");
-      let h = parseInt(hour);
-      const ampm = h >= 12 ? "PM" : "AM";
-      h = h % 12 || 12;
-      return `${("0" + h).slice(-2)}:${minute} ${ampm}`;
+
+  // Convert 24-hour to 12-hour time format
+  function to12HourFormat(time24) {
+    const [hour, minute] = time24.split(":");
+    let h = parseInt(hour);
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return `${("0" + h).slice(-2)}:${minute} ${ampm}`;
+  }
+
+  // Fetch prayer times from Aladhan API
+  async function getAutoTimings() {
+    const city = document.querySelector('[name="city"]').value;
+    const country = document.querySelector('[name="country"]').value;
+
+    if (!city || !country) {
+      alert("Please fill in both city and country.");
+      return;
     }
 
-    async function getAutoTimings() {
-      const city = document.querySelector('[name="city"]').value;
-      const country = document.querySelector('[name="country"]').value;
-      if (!city || !country) {
-        alert("Please fill in both city and country to get timings.");
-        return;
+    try {
+      const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`);
+      const data = await res.json();
+      const timings = data.data.timings;
+      const hijriDate = data.data.date.hijri.date;
+
+      const fields = {
+        fajrAzan: timings.Fajr,
+        dhuhrAzan: timings.Dhuhr,
+        asrAzan: timings.Asr,
+        maghribAzan: timings.Maghrib,
+        ishaAzan: timings.Isha,
+        tulu: timings.Sunrise,
+        gurub: timings.Sunset,
+        zawal: timings.Midnight
+      };
+
+      for (const [key, value] of Object.entries(fields)) {
+        const input = document.querySelector(`[name="${key}"]`);
+        if (input) input.value = value;
       }
 
-      try {
-        const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`);
-        const data = await response.json();
-        const timings = data.data.timings;
-        const hijriDate = data.data.date.hijri.date;
-
-        const fields = {
-          fajrAzan: timings.Fajr,
-          dhuhrAzan: timings.Dhuhr,
-          asrAzan: timings.Asr,
-          maghribAzan: timings.Maghrib,
-          ishaAzan: timings.Isha,
-          tulu: timings.Sunrise,
-          gurub: timings.Sunset,
-          zawal: timings.Midnight
-        };
-
-        for (const [key, time] of Object.entries(fields)) {
-          const input = document.querySelector(`[name="${key}"]`);
-          if (input) input.value = time;
-        }
-
-        document.getElementById("hijriDate").value = hijriDate;
-      } catch (err) {
-        alert("Error fetching prayer times. Please check city and country input.");
-      }
+      document.getElementById("hijriDate").value = hijriDate;
+    } catch (err) {
+      alert("Failed to fetch timings. Check city/country or try again.");
     }
+  }
 
-    document.getElementById("mosqueForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      const data = {};
-      formData.forEach((value, key) => {
-        data[key] = value;
-      });
-      localStorage.setItem("mosqueData", JSON.stringify(data));
-      window.location.href = "display.html";
+  // Make getAutoTimings accessible to HTML button
+  window.getAutoTimings = getAutoTimings;
+
+  // Save form to Firestore on submit
+  document.getElementById("mosqueForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
     });
-  </script></body>
+
+    try {
+      await addDoc(collection(db, "mosques"), data);
+      alert("Mosque timings saved successfully.");
+      window.location.href = "display.html";
+    } catch (error) {
+      console.error("Error writing document: ", error);
+      alert("Failed to save data: " + error.message);
+    }
+  });
+</script>
+
+</body>
 </html>
