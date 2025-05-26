@@ -40,15 +40,55 @@
       border: 1px solid #ccc;
       padding: 12px;
       text-align: left;
+      vertical-align: middle;
     }
     th {
       background-color: #ddd;
+    }
+    tr.clickable-row {
+      cursor: pointer;
+    }
+    tr.clickable-row:hover {
+      background-color: #f0f8ff;
+    }
+    .location-icon {
+      margin-left: 6px;
+      cursor: pointer;
+      width: 18px;
+      vertical-align: middle;
     }
     .no-results {
       text-align: center;
       color: #666;
       margin-top: 20px;
       font-size: 18px;
+    }
+    #timetable-container {
+      margin-top: 30px;
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      font-size: 18px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #timetable-container h3 {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    #timetable-container table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #timetable-container th, #timetable-container td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    #timetable-container th {
+      background-color: #f2f2f2;
     }
   </style>
 
@@ -70,156 +110,221 @@
       }
     }
 
+    function openGoogleMaps(mosque) {
+      // Compose address for Google Maps search
+      const parts = [
+        mosque.mosqueName,
+        mosque.location,
+        mosque.area,
+        mosque.pincode,
+        mosque.city,
+        mosque.state,
+        mosque.country
+      ].filter(Boolean);
+      const address = encodeURIComponent(parts.join(", "));
+      window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+    }
+
+    function showTimetable(mosque) {
+      // Example timetable display, adjust keys according to your Firestore structure
+      // Assuming mosque.timings object with keys like Fajr, Dhuhr, Asr, Maghrib, Isha
+      const container = document.getElementById("timetable-container");
+      if (!mosque.timings) {
+        container.innerHTML = `<p style="text-align:center; color:#666;">No timetable available for this mosque.</p>`;
+        return;
+      }
+      const times = mosque.timings;
+      container.innerHTML = `
+        <h3>Prayer Timetable for ${mosque.mosqueName}</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Prayer</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.entries(times).map(([prayer, time]) => `
+              <tr>
+                <td>${prayer}</td>
+                <td>${time}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      `;
+      container.scrollIntoView({ behavior: 'smooth' });
+    }
+
     function renderTable(filteredMosques) {
       const table = document.getElementById("mosqueTable");
       const tbody = table.querySelector("tbody");
       tbody.innerHTML = "";
 
-      filteredMosques.forEach(data => {
+      filteredMosques.forEach(mosque => {
         const row = document.createElement("tr");
+        row.classList.add("clickable-row");
+
         row.innerHTML = `
-          <td>${data.mosqueName || ""}</td>
-          <td>${data.location || ""}</td>
-          <td>${data.area || ""}</td>
-          <td>${data.pincode || ""}</td>
-          <td>${data.city || ""}</td>
-          <td>${data.state || ""}</td>
-          <td>${data.country || ""}</td>
+          <td>
+            ${mosque.mosqueName || ""}
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/Map_marker_icon.svg" 
+                 class="location-icon" title="View on Google Maps" alt="Location Icon" />
+          </td>
+          <td>${mosque.location || ""}</td>
+          <td>${mosque.area || ""}</td>
+          <td>${mosque.pincode || ""}</td>
+          <td>${mosque.city || ""}</td>
+          <td>${mosque.state || ""}</td>
+          <td>${mosque.country || ""}</td>
         `;
+
+        // Click on location icon opens Google Maps
+        row.querySelector(".location-icon").addEventListener("click", (e) => {
+          e.stopPropagation(); // prevent row click event
+          openGoogleMaps(mosque);
+        });
+
+        // Click on row shows timetable
+        row.addEventListener("click", () => {
+          showTimetable(mosque);
+        });
+
         tbody.appendChild(row);
       });
 
       document.getElementById("noResults").style.display = filteredMosques.length ? "none" : "block";
       table.style.display = filteredMosques.length ? "table" : "none";
+
+      // Clear timetable when search results change
+      document.getElementById("timetable-container").innerHTML = "";
     }
 
     function filterMosques(query) {
-  const terms = query.toLowerCase().split(/\s+/);
-  return mosqueList.filter(mosque => {
-    const combined = [
-      mosque.mosqueName,
-      mosque.location,
-      mosque.area,
-      mosque.pincode,
-      mosque.city,
-      mosque.state,
-      mosque.country
-    ].join(" ").toLowerCase();
+      const terms = query.toLowerCase().split(/\s+/);
+      return mosqueList.filter(mosque => {
+        const combined = [
+          mosque.mosqueName,
+          mosque.location,
+          mosque.area,
+          mosque.pincode,
+          mosque.city,
+          mosque.state,
+          mosque.country
+        ].join(" ").toLowerCase();
 
-    return terms.every(term => combined.includes(term));
-  });
-}
+        return terms.every(term => combined.includes(term));
+      });
+    }
 
-async function performSearch() {
-  const query = document.getElementById("searchInput").value.trim();
-  if (!mosqueList.length) await loadMosques();
+    async function performSearch() {
+      const query = document.getElementById("searchInput").value.trim();
+      if (!mosqueList.length) await loadMosques();
 
-  const results = query ? filterMosques(query) : [];
-  renderTable(results);
-}
-
+      const results = query ? filterMosques(query) : [];
+      renderTable(results);
+    }
 
     async function findNearbyMosques() {
-  if (!navigator.geolocation) {
-    alert("Geolocation is not supported by your browser.");
-    return;
-  }
-
-  // Check permission status before requesting location
-  if (navigator.permissions) {
-    try {
-      const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
-      if (permissionStatus.state === 'denied') {
-        alert("Location access is blocked. Please enable location permissions for this site in your browser settings.");
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
         return;
       }
-      // Optional: listen for changes in permission status
-      permissionStatus.onchange = () => {
-        console.log('Geolocation permission state changed to', permissionStatus.state);
-      };
-    } catch (err) {
-      console.warn('Permissions API is not fully supported in this browser');
-    }
-  }
 
-  navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      const { latitude, longitude } = position.coords;
-
-      try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-          {
-            headers: {
-              "User-Agent": "mosque-finder-app/1.0",
-              "Referer": window.location.origin
-            }
+      if (navigator.permissions) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+          if (permissionStatus.state === 'denied') {
+            alert("Location access is blocked. Please enable location permissions for this site in your browser settings.");
+            return;
           }
-        );
-
-        const data = await response.json();
-        const queryParts = [
-          data.address.suburb,
-          data.address.road,
-          data.address.city || data.address.town || data.address.village,
-          data.address.state,
-          data.address.postcode
-        ];
-
-        const locationQuery = queryParts.filter(Boolean).join(" ");
-        document.getElementById("searchInput").value = locationQuery;
-        performSearch();
-
-      } catch (error) {
-        console.error("Error fetching location data:", error);
-        alert("Failed to retrieve address from coordinates.");
+          permissionStatus.onchange = () => {
+            console.log('Geolocation permission state changed to', permissionStatus.state);
+          };
+        } catch (err) {
+          console.warn('Permissions API is not fully supported in this browser');
+        }
       }
-    },
-    (error) => {
-      console.error("Geolocation error:", error);
-      switch (error.code) {
-        case error.PERMISSION_DENIED:
-          alert("Permission denied. Please allow location access in your browser settings.");
-          break;
-        case error.POSITION_UNAVAILABLE:
-          alert("Location information is unavailable.");
-          break;
-        case error.TIMEOUT:
-          alert("The request to get your location timed out.");
-          break;
-        default:
-          alert("An unknown error occurred while retrieving location.");
-          break;
-      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+              {
+                headers: {
+                  "User-Agent": "mosque-finder-app/1.0",
+                  "Referer": window.location.origin
+                }
+              }
+            );
+
+            const data = await response.json();
+            const queryParts = [
+              data.address.suburb,
+              data.address.road,
+              data.address.city || data.address.town || data.address.village,
+              data.address.state,
+              data.address.postcode
+            ];
+
+            const locationQuery = queryParts.filter(Boolean).join(" ");
+            document.getElementById("searchInput").value = locationQuery;
+            performSearch();
+
+          } catch (error) {
+            console.error("Error fetching location data:", error);
+            alert("Failed to retrieve address from coordinates.");
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              alert("Permission denied. Please allow location access in your browser settings.");
+              break;
+            case error.POSITION_UNAVAILABLE:
+              alert("Location information is unavailable.");
+              break;
+            case error.TIMEOUT:
+              alert("The request to get your location timed out.");
+              break;
+            default:
+              alert("An unknown error occurred while getting your location.");
+              break;
+          }
+        }
+      );
     }
-  );
-}
 
-
-
-    function redirectToSignup() {
-      window.location.href = "signup.html";
-    }
-
-    window.performSearch = performSearch;
-    window.findNearbyMosques = findNearbyMosques;
-    window.redirectToSignup = redirectToSignup;
+    window.onload = () => {
+      document.getElementById("searchButton").addEventListener("click", performSearch);
+      document.getElementById("searchInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") performSearch();
+      });
+      document.getElementById("nearbyButton").addEventListener("click", findNearbyMosques);
+    };
   </script>
 </head>
 <body>
-  <h2>Search Mosque by Location</h2>
+  <h2>Search Mosque</h2>
   <div class="search-container">
-    <input type="text" id="searchInput" placeholder="Enter locality, area, pincode, road, etc...">
-    <button onclick="performSearch()">Search</button>
-    <button onclick="findNearbyMosques()">Find Near Me</button>
-    <button onclick="redirectToSignup()">Add My Mosque</button>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search by mosque name, location, city, etc."
+      autocomplete="off"
+    />
+    <button id="searchButton">Search</button>
+    <button id="nearbyButton">Find Nearby Mosques</button>
   </div>
 
-  <table id="mosqueTable" style="display: none;">
+  <table id="mosqueTable" style="display:none">
     <thead>
       <tr>
         <th>Mosque Name</th>
-        <th>Landmark/Road</th>
+        <th>Location</th>
         <th>Area</th>
         <th>Pincode</th>
         <th>City</th>
@@ -227,9 +332,15 @@ async function performSearch() {
         <th>Country</th>
       </tr>
     </thead>
-    <tbody></tbody>
+    <tbody>
+      <!-- Filled dynamically -->
+    </tbody>
   </table>
 
-  <div class="no-results" id="noResults">No mosque found matching your search.</div>
+  <div id="noResults" class="no-results" style="display:none;">
+    No mosques found matching your search.
+  </div>
+
+  <div id="timetable-container"></div>
 </body>
 </html>
