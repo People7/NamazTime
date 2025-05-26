@@ -134,49 +134,48 @@
     import { collection, addDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
     function to12HourFormat(time24) {
-  let [hour, minute] = time24.split(":").map(Number);
-  const ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12;
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${ampm}`;
-}
-
-
-    async function getAutoTimings() {
-  const city = document.querySelector('[name="city"]').value;
-  const country = document.querySelector('[name="country"]').value;
-  if (!city || !country) {
-    alert("Please fill in both city and country to get timings.");
-    return;
-  }
-
-  try {
-    const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`);
-    const data = await response.json();
-    const timings = data.data.timings;
-    const hijriDate = data.data.date.hijri.date;
-
-    const fields = {
-      fajrAzan: timings.Fajr,
-      dhuhrAzan: timings.Dhuhr,
-      asrAzan: timings.Asr,
-      maghribAzan: timings.Maghrib,
-      ishaAzan: timings.Isha,
-      tulu: timings.Sunrise,
-      gurub: timings.Sunset,
-      zawal: timings.Midnight
-    };
-
-    for (const [key, time] of Object.entries(fields)) {
-      const input = document.querySelector(`[name="${key}"]`);
-      if (input) input.value = to12HourFormat(time);
+      const [hour, minute] = time24.split(":");
+      let h = parseInt(hour);
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      return `${("0" + h).slice(-2)}:${minute} ${ampm}`;
     }
 
-    document.getElementById("hijriDate").value = hijriDate;
-  } catch (err) {
-    alert("Error fetching prayer times. Please check city and country input.");
-  }
-}
+    async function getAutoTimings() {
+      const city = document.querySelector('[name="city"]').value;
+      const country = document.querySelector('[name="country"]').value;
+      if (!city || !country) {
+        alert("Please fill in both city and country to get timings.");
+        return;
+      }
 
+      try {
+        const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`);
+        const data = await response.json();
+        const timings = data.data.timings;
+        const hijriDate = data.data.date.hijri.date;
+
+        const fields = {
+          fajrAzan: timings.Fajr,
+          dhuhrAzan: timings.Dhuhr,
+          asrAzan: timings.Asr,
+          maghribAzan: timings.Maghrib,
+          ishaAzan: timings.Isha,
+          tulu: timings.Sunrise,
+          gurub: timings.Sunset,
+          zawal: timings.Midnight
+        };
+
+        for (const [key, time] of Object.entries(fields)) {
+          const input = document.querySelector(`[name="${key}"]`);
+          if (input) input.value = time;
+        }
+
+        document.getElementById("hijriDate").value = hijriDate;
+      } catch (err) {
+        alert("Error fetching prayer times. Please check city and country input.");
+      }
+    }
 
     window.getAutoTimings = getAutoTimings;
 
