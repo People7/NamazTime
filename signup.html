@@ -79,9 +79,12 @@
         return;
       }
 
-      // You can replace this with actual backend API call
-      alert("Sign up successful! Now redirecting to add mosque page...");
-      window.location.href = "add-mosque.html"; // Create this page for mosque submission
+      // Save user data temporarily in localStorage (simulated signup)
+      const userData = { email, password };
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      alert("Sign up successful! Redirecting to mosque submission page...");
+      window.location.href = "mosque.html"; // Replace with your actual mosque form page
     }
   </script>
 </body>
