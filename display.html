@@ -1,66 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mosque Prayer Time Display</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #000;
       color: #0f0;
-      padding: 10px;
       margin: 0;
+      padding: 10px;
+    }
+
+    h2, h3 {
+      text-align: center;
+      margin: 0.5em 0;
     }
 
     h2 {
-      text-align: center;
-      font-size: 3em;
+      font-size: 2.5em;
     }
 
     h3 {
+      font-size: 1.8em;
+    }
+
+    .mosque-info, #dateTime, .hijri-date {
       text-align: center;
-      font-size: 2em;
-      margin-top: 1em;
+      font-size: 1.5em;
+      margin-top: 10px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
-      font-size: 2em;
+      font-size: 1.5em;
     }
 
     th, td {
       border: 1px solid #0f0;
-      padding: 15px;
+      padding: 12px;
       text-align: center;
-    }
-
-    .mosque-info, #dateTime, .hijri-date {
-      text-align: center;
-      font-size: 2em;
-      margin-top: 10px;
     }
 
     @media (max-width: 600px) {
       h2 {
-        font-size: 2em;
+        font-size: 1.8em;
       }
 
       h3 {
-        font-size: 1.5em;
-      }
-
-      table {
-        font-size: 1.2em;
-      }
-
-      th, td {
-        padding: 10px;
+        font-size: 1.4em;
       }
 
       .mosque-info, #dateTime, .hijri-date {
-        font-size: 1.2em;
+        font-size: 1.1em;
+      }
+
+      table {
+        font-size: 1em;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      th, td {
+        padding: 8px;
       }
     }
   </style>
@@ -88,7 +94,7 @@
     <table>
       <tbody>
         <tr><th>Tulu</th><td id="tulu"></td></tr>
-        <tr><th>Gurub</th><td id="gurub"></td></tr>
+        <tr><th>Gurub Aftab</th><td id="gurub"></td></tr>
         <tr><th>Zawal</th><td id="zawal"></td></tr>
       </tbody>
     </table>
@@ -146,7 +152,6 @@
       document.getElementById("tulu").textContent = to12HourFormat(data.tulu);
       document.getElementById("gurub").textContent = to12HourFormat(data.gurub);
       document.getElementById("zawal").textContent = to12HourFormat(data.zawal);
-
       document.getElementById("hijriDate").textContent = data.hijriDate || '-';
     }
 
