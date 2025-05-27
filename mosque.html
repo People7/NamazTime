@@ -48,62 +48,53 @@
         <input type="text" name="hijriDate" id="hijriDate" class="form-control" />
       </div>
 
-      <h5 class="mt-4">Prayer Timings (Azan & Jamaat)</h5>
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label">Fajr Azan</label>
-          <input type="time" name="fajrAzan" step="1" class="form-control" required />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Fajr Jamaat</label>
-          <input type="time" name="fajr" step="1" class="form-control" required />
-        </div>
+      <!-- ... same head section as before ... -->
 
-        <div class="col-md-6">
-          <label class="form-label">Dhuhr Azan</label>
-          <input type="time" name="dhuhrAzan" step="1" class="form-control" required />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Dhuhr Jamaat</label>
-          <input type="time" name="dhuhr" step="1" class="form-control" required />
-        </div>
+<h5 class="mt-4">Prayer Timings (Azan & Jamaat)</h5>
+<div class="table-responsive">
+  <table class="table table-bordered align-middle text-center">
+    <thead class="table-light">
+      <tr>
+        <th>Prayer</th>
+        <th>Azan Time</th>
+        <th>Jamaat Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Fajr</td>
+        <td><input type="time" name="fajrAzan" step="60" class="form-control text-center" required></td>
+        <td><input type="time" name="fajr" step="60" class="form-control text-center" required></td>
+      </tr>
+      <tr>
+        <td>Dhuhr</td>
+        <td><input type="time" name="dhuhrAzan" step="60" class="form-control text-center" required></td>
+        <td><input type="time" name="dhuhr" step="60" class="form-control text-center" required></td>
+      </tr>
+      <tr>
+        <td>Asr</td>
+        <td><input type="time" name="asrAzan" step="60" class="form-control text-center" required></td>
+        <td><input type="time" name="asr" step="60" class="form-control text-center" required></td>
+      </tr>
+      <tr>
+        <td>Maghrib</td>
+        <td><input type="time" name="maghribAzan" step="60" class="form-control text-center" required></td>
+        <td><input type="time" name="maghrib" step="60" class="form-control text-center" required></td>
+      </tr>
+      <tr>
+        <td>Isha</td>
+        <td><input type="time" name="ishaAzan" step="60" class="form-control text-center" required></td>
+        <td><input type="time" name="isha" step="60" class="form-control text-center" required></td>
+      </tr>
+      <tr>
+        <td>Jumuah</td>
+        <td><input type="time" name="jumuahAzan" step="60" class="form-control text-center" required></td>
+        <td><input type="time" name="jumuah" step="60" class="form-control text-center" required></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-        <div class="col-md-6">
-          <label class="form-label">Asr Azan</label>
-          <input type="time" name="asrAzan" step="1" class="form-control" required />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Asr Jamaat</label>
-          <input type="time" name="asr" step="1" class="form-control" required />
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Maghrib Azan</label>
-          <input type="time" name="maghribAzan" step="1" class="form-control" required />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Maghrib Jamaat</label>
-          <input type="time" name="maghrib" step="1" class="form-control" required />
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Isha Azan</label>
-          <input type="time" name="ishaAzan" step="1" class="form-control" required />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Isha Jamaat</label>
-          <input type="time" name="isha" step="1" class="form-control" required />
-        </div>
-
-        <div class="col-md-6">
-          <label class="form-label">Jumuah Azan</label>
-          <input type="time" name="jumuahAzan" step="1" class="form-control" required />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Jumuah Jamaat</label>
-          <input type="time" name="jumuah" step="1" class="form-control" required />
-        </div>
-      </div>
 
       <h5 class="mt-4">Sun Times</h5>
       <div class="row g-3">
