@@ -48,7 +48,9 @@
         <input type="text" name="hijriDate" id="hijriDate" class="form-control" />
       </div>
 
-      <!-- ... same head section as before ... -->
+   <div class="d-grid gap-2 mt-4">
+        <button type="button" class="btn btn-primary" onclick="getAutoTimings()">click to Auto Fill Timings</button>
+      </div>   <!-- ... same head section as before ... -->
 
 <h5 class="mt-4">Prayer Timings (Azan & Jamaat)</h5>
 <div class="table-responsive">
@@ -102,18 +104,17 @@
           <label class="form-label">Tulu (Sunrise)</label>
           <input type="time" name="tulu" step="1" class="form-control" required />
         </div>
+       <div class="col-md-4">
+          <label class="form-label">Zawal Time</label>
+          <input type="time" name="zawal" step="1" class="form-control" required />
+        </div>    
         <div class="col-md-4">
           <label class="form-label">Gurub (Sunset)</label>
           <input type="time" name="gurub" step="1" class="form-control" required />
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Zawal Time</label>
-          <input type="time" name="zawal" step="1" class="form-control" required />
-        </div>
       </div>
 
       <div class="d-grid gap-2 mt-4">
-        <button type="button" class="btn btn-primary" onclick="getAutoTimings()">Auto Fill Timings</button>
         <button type="submit" class="btn btn-success">Save & Display</button>
       </div>
     </form>
