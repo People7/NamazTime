@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>NamazTime - Find a mosque near you</title>
+  <title>NamazTime - Main Page</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Amiri&family=Segoe+UI&display=swap');
 
@@ -68,29 +68,13 @@
       transform: scale(1.05);
     }
 
-    .loader {
-      margin-top: 30px;
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #00c853;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite;
-    }
-
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
   </style>
 </head>
 <body>
-  <!-- Replace logo src with your own mosque-style icon -->
   <img src="https://cdn-icons-png.flaticon.com/512/1829/1829586.png" alt="Mosque Logo" class="logo">
   <h1>NamazTime</h1>
   <p>Find a mosque near you</p>
@@ -101,14 +85,5 @@
     <button onclick="window.location.href='add-mosque.html'">Add Mosque</button>
     <button onclick="window.location.href='edit-mosque.html'">Edit Mosque</button>
   </div>
-
-  <div class="loader"></div>
-
-  <script>
-    setTimeout(() => {
-      // Redirect automatically if you want (or comment this out)
-      // window.location.href = 'search-mosque.html';
-    }, 3000);
-  </script>
 </body>
 </html>
