@@ -90,75 +90,70 @@
   </div>
 
   <div class="sun-times">
-    <h3>Sun Times</h3>
     <table>
       <tbody>
-        <tr><th>Tulu</th><td id="tulu"></td></tr>
-        <tr><th>Gurub Aftab</th><td id="gurub"></td></tr>
-        <tr><th>Zawal</th><td id="zawal"></td></tr>
+        <tr><th><strong>Tulu Aftab</strong></th><td id="tulu"></td></tr>
+        <tr><th><strong>Gurub Aftab</strong></th><td id="gurub"></td></tr>
+        <tr><th><strong>Zawal</strong></th><td id="zawal"></td></tr>
       </tbody>
     </table>
   </div>
+
+<div id="dateTime"></div>
 
   <div class="hijri-date">
     Hijri Date: <span id="hijriDate"></span>
   </div>
 
-  <div id="dateTime"></div>
-
   <script type="module">
     import { db } from './firebase.js';
     import { collection, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-    function to12HourFormat(time24) {
-      if (!time24 || typeof time24 !== 'string') return '-';
-      let [hour, minute] = time24.split(":").map(Number);
-      if (isNaN(hour) || isNaN(minute)) return time24;
-      const ampm = hour >= 12 ? "PM" : "AM";
-      hour = hour % 12 || 12;
-      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${ampm}`;
+    function formatTime24(time) {
+      if (!time || typeof time !== "string") return "-";
+      let [hour, minute] = time.split(":").map(Number);
+      if (isNaN(hour) || isNaN(minute)) return time;
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
     }
 
     async function loadMosqueData() {
-      const snapshot = await getDocs(collection(db, "mosques"));
-      if (snapshot.empty) return;
+      const querySnapshot = await getDocs(collection(db, "mosques"));
+      if (!querySnapshot.empty) {
+        const mosqueData = querySnapshot.docs[0].data();
+        document.getElementById("mosqueName").textContent = mosqueData.mosqueName;
+        document.getElementById("mosqueDetails").textContent = `${mosqueData.location}, ${mosqueData.area}, ${mosqueData.city} - ${mosqueData.pincode}, ${mosqueData.state}, ${mosqueData.country}`;
 
-      const doc = snapshot.docs[0];
-      const data = doc.data();
+        const prayers = [
+          { name: "Fajr", azan: mosqueData.fajrAzan, jamaat: mosqueData.fajr },
+          { name: "Dhuhr", azan: mosqueData.dhuhrAzan, jamaat: mosqueData.dhuhr },
+          { name: "Asr", azan: mosqueData.asrAzan, jamaat: mosqueData.asr },
+          { name: "Maghrib", azan: mosqueData.maghribAzan, jamaat: mosqueData.maghrib },
+          { name: "Isha", azan: mosqueData.ishaAzan, jamaat: mosqueData.isha },
+          { name: "Jumuah", azan: mosqueData.jumuahAzan || "-", jamaat: mosqueData.jumuah || "-" }
+        ];
 
-      document.getElementById("mosqueName").textContent = data.mosqueName || '';
-      document.getElementById("mosqueDetails").textContent =
-        `${data.location}, ${data.area}, ${data.city} - ${data.pincode}, ${data.state}, ${data.country}`;
+        const tbody = document.getElementById("prayerTable");
+        prayers.forEach(prayer => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><strong>${prayer.name}</strong></td>
+            <td>${formatTime24(prayer.azan)}</td>
+            <td>${formatTime24(prayer.jamaat)}</td>
+          `;
+          tbody.appendChild(row);
+        });
 
-      const prayers = [
-        { name: 'Fajr', azan: data.fajrAzan, jamaat: data.fajr },
-        { name: 'Dhuhr', azan: data.dhuhrAzan, jamaat: data.dhuhr },
-        { name: 'Asr', azan: data.asrAzan, jamaat: data.asr },
-        { name: 'Maghrib', azan: data.maghribAzan, jamaat: data.maghrib },
-        { name: 'Isha', azan: data.ishaAzan, jamaat: data.isha },
-        { name: 'Jumuah', azan: data.jumuahAzan || '-', jamaat: data.jumuah || '-' }
-      ];
-
-      const tbody = document.getElementById("prayerTable");
-      prayers.forEach(p => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${p.name}</td>
-          <td>${to12HourFormat(p.azan)}</td>
-          <td>${to12HourFormat(p.jamaat)}</td>`;
-        tbody.appendChild(row);
-      });
-
-      document.getElementById("tulu").textContent = to12HourFormat(data.tulu);
-      document.getElementById("gurub").textContent = to12HourFormat(data.gurub);
-      document.getElementById("zawal").textContent = to12HourFormat(data.zawal);
-      document.getElementById("hijriDate").textContent = data.hijriDate || '-';
+        document.getElementById("tulu").textContent = formatTime24(mosqueData.tulu);
+        document.getElementById("gurub").textContent = formatTime24(mosqueData.gurub);
+        document.getElementById("zawal").textContent = formatTime24(mosqueData.zawal);
+        document.getElementById("hijriDate").textContent = mosqueData.hijriDate || "-";
+      }
     }
 
     function updateDateTime() {
       const now = new Date();
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+      const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+      const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
       const date = now.toLocaleDateString(undefined, options);
       document.getElementById("dateTime").textContent = `${time} | ${date}`;
     }
